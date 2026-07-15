@@ -1,0 +1,30 @@
+Requirement 2: Predicting Medical Charges (Regression)
+Setup
+Using the encoded dataset (one-hot encoded sex, smoker, region), I split the data 80/20 into training and test sets (random_state=42), yielding 1069 training rows and 268 test rows. Features were standardized using StandardScaler for the model that requires it (SVR).
+Models Trained & Evaluated
+ModelMAEMSERMSER²Decision Tree (max_depth=4)2621.3118,886,6314345.880.897Polynomial Regression (deg 2)2867.3221,585,8444646.060.883SVR (rbf kernel)2547.1122,175,1704709.050.879Polynomial Regression (deg 3)3048.8623,719,5304870.270.871Multiple Linear Regression4177.0535,478,0215956.340.807Ridge Regression (α=0.01)4177.2235,479,7875956.490.807Lasso Regression (α=0.01)4177.0535,478,1505956.350.807Polynomial Regression (deg 4)3756.1536,697,6616057.860.800SVR (linear kernel)3215.5837,168,3306096.580.798Simple Linear Regression (smoker_yes only)5830.6460,039,3047748.500.673
+Key Findings
+
+Simple Linear Regression, using smoker_yes as the single strongest predictor identified in EDA, achieved R²=0.673 alone — confirming smoking status is the dominant cost driver.
+Multiple Linear Regression improved R² to 0.807 by incorporating age, BMI, children, and region.
+Polynomial Regression was tested at degrees 2–4 to capture nonlinear effects. Degree 2 performed best (R²=0.883); by degree 4, train R² kept climbing (0.867) while test R² fell (0.800) — clear evidence of overfitting.
+Ridge and Lasso, tuned across α = [0.01, 0.1, 1, 10, 50, 100, 200], both performed best at the lowest α tested (0.01), nearly matching unregularized Multiple Linear Regression. This indicates the base model wasn't overfitting significantly, so regularization offered little benefit. Lasso's coefficients at α=0.01 did not zero out any features (smoker_yes dominated at ~23,078; all other coefficients were nonzero but much smaller).
+SVR required scaling the target variable (charges) in addition to features — without this, both kernels performed worse than a mean baseline (negative R²) due to the default epsilon being too small relative to charge magnitudes. After fixing this, RBF kernel reached R²=0.879 (best MAE overall at 2547), while the linear kernel reached R²=0.798.
+Decision Tree Regression was tuned across max_depth = [2, 3, 4, 5, None]. Performance peaked at depth=4 (R²=0.897) and declined at unrestricted depth (R²=0.819), again demonstrating overfitting with excessive model complexity. The tree's top split was on smoker_yes, followed by age and bmi — consistent with EDA findings.
+
+Recommendation
+Decision Tree Regression (max_depth=4) is recommended to Ms. Nabil: it achieved the highest R² (0.897) and near-lowest MAE (2621) among all seven model types, showed no signs of overfitting versus deeper trees, and — unlike SVR or polynomial regression — is directly interpretable. The tree can be shown to the board as a simple decision path (e.g., "smoker → age → BMI"), making it easier to justify pricing decisions to non-technical stakeholders than a black-box or coefficient-heavy alternative.
+
+Requirement 3: Flagging Expensive Customers (Classification)
+Setup
+"Expensive" was defined per the finance team's rule: charges above the dataset median of $9,386.16. This produced a nearly balanced binary target (669 vs. 668 customers). Split 80/20 with stratification to preserve class balance in both sets.
+Models Trained & Evaluated
+ModelAccuracyPrecisionRecallF1Logistic Regression0.9070.8980.9180.908Decision Tree (max_depth=5)0.9400.9920.8880.937
+Decision Tree depth was tuned across [2, 3, 4, 5, None]; accuracy peaked at depth=5 (0.940) and dropped at unrestricted depth (0.910), consistent with the overfitting pattern seen in the regression task.
+Key Findings
+
+Logistic Regression achieved balanced error (14 false positives, 11 false negatives out of 268 test cases).
+Decision Tree (depth=5) achieved substantially higher precision (0.992) — when it flags a customer as expensive, it is correct 99% of the time — at a modest cost to recall (0.888 vs. Logistic Regression's 0.918), meaning it misses slightly more truly expensive customers than it falsely flags cheap ones.
+
+Recommendation
+Decision Tree Classifier (max_depth=5) is recommended: higher overall accuracy, very high precision (minimizing false alarms that would misprice low-risk customers), and the same interpretability advantage as the regression model. The one caveat worth flagging to the stakeholder: if the cost of missing an expensive customer outweighs the cost of a false alarm, Logistic Regression's higher recall may be preferable — this is a business tradeoff, not a modeling one.
