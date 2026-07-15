@@ -1,3 +1,11 @@
+Overall Workflow
+The project keeps the raw and cleaned data separate, applies the same cleaned dataset throughout the analysis, and uses a fixed random_state of 42 for reproducibility. The exploratory findings guided the model choices, and all models were compared using consistent evaluation metrics before selecting the final regression and classification recommendations.
+
+Requirement 1: Data Cleaning and Exploratory Analysis
+The original dataset was loaded and reviewed using head, shape, info, describe, and category counts. A separate cleaned dataframe was created so the raw data remained unchanged. Categorical values were standardized by removing extra spaces and converting text to lowercase. Missing values, invalid numerical values, and duplicate rows were checked. No missing or invalid numerical values were found, and one exact duplicate row was removed. The cleaned dataset was saved as insurance_cleaned.csv, while categorical variables were one-hot encoded for correlation analysis and modeling.
+
+Six visualizations were created to examine the distribution of charges, smoking status, age, BMI, region, and feature correlations. Medical charges were strongly right-skewed, with a small group of customers producing very high costs. Smoking status showed the strongest relationship with charges. Smokers had much higher average and median charges than non-smokers. Charges also generally increased with age. BMI had a moderate positive relationship with charges, but its effect was strongest among smokers with high BMI. Region, sex, and number of children showed weaker individual relationships with charges.
+
 Requirement 2: Predicting Medical Charges (Regression)
 Setup
 Using the encoded dataset (one-hot encoded sex, smoker, region), I split the data 80/20 into training and test sets (random_state=42), yielding 1069 training rows and 268 test rows. Features were standardized using StandardScaler for the model that requires it (SVR).
